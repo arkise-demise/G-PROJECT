@@ -9,9 +9,11 @@ import (
 func main() {
 	http.HandleFunc("/login", handlers.LoginHandler)
 	http.HandleFunc("/register", handlers.RegisterHandler)
+	http.HandleFunc("/refresh-token", handlers.RefreshTokenHandler)
+
 	http.Handle("/users", middleware.AuthMiddleware(http.HandlerFunc(handlers.ListUsersHandler)))
 	http.Handle("/upload", middleware.AuthMiddleware(http.HandlerFunc(handlers.UploadImageHandler)))
-	http.Handle("/image/", middleware.AuthMiddleware(http.HandlerFunc(handlers.GetImageHandler)))
+	http.Handle("/open_image/", middleware.AuthMiddleware(http.HandlerFunc(handlers.GetImageHandler)))
 
 	err := http.ListenAndServe("localhost:8000", nil)
 	if err != nil {

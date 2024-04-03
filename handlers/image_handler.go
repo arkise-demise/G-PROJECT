@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 func init() {
@@ -43,7 +42,7 @@ func uploadImageHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    file, _, err := r.FormFile("image")
+    file, _, err := r.FormFile("images")
     if err != nil {
         http.Error(w, "No image provided", http.StatusBadRequest)
         return
@@ -79,14 +78,18 @@ func GetImageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getImageHandler(w http.ResponseWriter, r *http.Request) {
-    filename := r.URL.Query().Get("images")
+	
+    filename := r.URL.Path[len("/image/"):]
 
-    file, err := os.Open(filename)
+    imagePath := filepath.Join(imageUploadPath, filename)
+
+    file, err := os.Open(imagePath)
     if err != nil {
         http.Error(w, "Image not found", http.StatusNotFound)
         return
     }
     defer file.Close()
 
-    http.ServeContent(w, r, filename, time.Time{}, file)
+    http.ServeFile(w, r, imagePath)
 }
+

@@ -10,10 +10,12 @@ import (
 
 var jwtKey = []byte("secret_key")
 
+const TokenExpiration = 1 * time.Minute
+
 func GenerateToken(user models.User) (string, error) {
     claims := jwt.MapClaims{
         "id": user.ID,
-        "exp": time.Now().Add(time.Hour * 24).Unix(),
+        "exp": time.Now().Add(TokenExpiration).Unix(), 
     }
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
@@ -37,7 +39,7 @@ func VerifyToken(tokenString string) (models.User, error) {
 
     if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
         userID := int(claims["id"].(float64))
-       
+
         user := models.User{
             ID: userID,
         }
