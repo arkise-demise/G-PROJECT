@@ -44,3 +44,9 @@ github.com/dgrijalva/jwt-go: For JSON Web Token (JWT) generation and validation.
 Ensure you have these dependencies installed before running the application.
 
 ```
+
+This project includes a utility function for generating UUIDs.
+
+### UUID Generation Utility
+
+The `GenerateUUID()` function in the `utils` package generates a UUID (Universally Unique Identifier) using the Google UUID library (`github.com/google/uuid`). This function is useful for generating unique identifiers within the project. and i used for the image handling.

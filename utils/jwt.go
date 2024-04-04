@@ -10,7 +10,7 @@ import (
 
 var jwtKey = []byte("secret_key")
 
-const TokenExpiration = 1 * time.Minute
+const TokenExpiration = 1 * time.Hour
 
 func GenerateToken(user models.User) (string, error) {
     claims := jwt.MapClaims{

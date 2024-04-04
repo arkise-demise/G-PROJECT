@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"G-PROJECT/models"
 	"G-PROJECT/utils"
 	"encoding/json"
 	"net/http"
@@ -8,25 +9,35 @@ import (
 )
 
 func RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
-    expiredToken := r.Header.Get("Authorization")
-
-    user, err := utils.VerifyToken(expiredToken)
-    if err != nil {
-        http.Error(w, "Invalid or expired token", http.StatusUnauthorized)
-        return
-    }
-
-    newToken, err := utils.GenerateToken(user)
-    if err != nil {
-        http.Error(w, "Failed to generate new token", http.StatusInternalServerError)
-        return
-    }
-
-    w.Header().Set("Authorization", newToken)
 
     w.Header().Set("Content-Type", "application/json")
-    json.NewEncoder(w).Encode(map[string]interface{}{
-        "message": "Token refreshed successfully",
-        "expiration": time.Now().Add(utils.TokenExpiration).Unix(),
-    })
+
+	var user models.User
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	storedUser := dbInstance.GetUserByUsername(user.Username)
+	if storedUser == nil || storedUser.Password != user.Password {
+		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
+		return
+	}
+
+	tokenString, err := utils.GenerateToken(*storedUser)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "token",
+		Value:    tokenString,
+		Expires:  time.Now().Add(24 * time.Hour), 
+		HttpOnly: true,
+		Secure:   true,                           
+		SameSite: http.SameSiteStrictMode,
+	})
+
 }

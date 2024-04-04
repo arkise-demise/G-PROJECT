@@ -13,9 +13,9 @@ func main() {
 
 	http.Handle("/users", middleware.AuthMiddleware(http.HandlerFunc(handlers.ListUsersHandler)))
 	http.Handle("/upload", middleware.AuthMiddleware(http.HandlerFunc(handlers.UploadImageHandler)))
-	http.Handle("/open_image/", middleware.AuthMiddleware(http.HandlerFunc(handlers.GetImageHandler)))
+	http.Handle("/open-image/", middleware.AuthMiddleware(http.HandlerFunc(handlers.GetImageHandler)))
 
-	err := http.ListenAndServe("localhost:8000", nil)
+	err := http.ListenAndServe("localhost:8080", nil)
 	if err != nil {
 		panic(err)
 	}

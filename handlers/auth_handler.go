@@ -30,6 +30,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
 		Value:    tokenString,
