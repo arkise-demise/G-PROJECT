@@ -26,6 +26,15 @@ func (db *Database) GetUserByUsername(username string) *models.User {
     return &user
 }
 
+func (db *Database) GetUserByID(userID int) *models.User {
+    for _, user := range db.Users {
+        if user.ID == userID {
+            return &user
+        }
+    }
+    return nil
+}
+
 func (db *Database) GetAllUsers() []models.User {
     users := make([]models.User, 0, len(db.Users))
     for _, user := range db.Users {
