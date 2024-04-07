@@ -13,10 +13,12 @@ import (
 )
 
 func main() {
-	requestTimeout := 1 * time.Minute
+	requestTimeout := 2* time.Minute
 
 	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
 	defer cancel()
+
+	handlers.SetContext(ctx)
 
 	http.HandleFunc("/login", handlers.LoginHandler)
 	http.HandleFunc("/register", handlers.RegisterHandler)

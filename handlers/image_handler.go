@@ -24,6 +24,11 @@ func UploadImageHandler(w http.ResponseWriter, r *http.Request) {
 func uploadImageHandler(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
 
+    if ctx.Err() != nil {
+		http.Error(w, "Request timed out", http.StatusRequestTimeout)
+		return
+	}
+
     tokenCookie, err := r.Cookie("token")
     if err != nil {
         http.Error(w, "Unauthorized", http.StatusUnauthorized)
