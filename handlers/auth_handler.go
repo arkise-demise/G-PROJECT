@@ -1,26 +1,21 @@
 package handlers
 
 import (
+	"G-PROJECT/db"
+	"G-PROJECT/middleware"
 	"G-PROJECT/models"
 	"G-PROJECT/utils"
-	"context"
 	"encoding/json"
 	"net/http"
 	"time"
 )
-var ctx context.Context
 
-func SetContext(c context.Context) {
-    ctx = c
+func init() {
+	dbInstance = db.NewDatabase()
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-
-	if ctx.Err() != nil {
-		http.Error(w, "Request timed out", http.StatusRequestTimeout)
-		return
-	}
 
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
@@ -31,13 +26,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 	storedUser := dbInstance.GetUserByUsername(user.Username)
 	if storedUser == nil || storedUser.Password != user.Password {
-		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
+		middleware.ErrorResponse(w, middleware.UNAUTHORIZED, "Invalid username or password")
 		return
 	}
 
 	tokenString, err := utils.GenerateToken(*storedUser)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, err.Error())
 		return
 	}
 
@@ -54,20 +49,15 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	if ctx.Err() != nil {
-		http.Error(w, "Request timed out", http.StatusRequestTimeout)
-		return
-	}
-
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, err.Error())
 		return
 	}
 
 	if dbInstance.GetUserByUsername(user.Username) != nil {
-		http.Error(w, "Username already exists", http.StatusBadRequest)
+		middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, "Username already exists")
 		return
 	}
 
@@ -79,27 +69,22 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 func RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	if ctx.Err() != nil {
-		http.Error(w, "Request timed out", http.StatusRequestTimeout)
-		return
-	}
-
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, err.Error())
 		return
 	}
 
 	storedUser := dbInstance.GetUserByUsername(user.Username)
 	if storedUser == nil || storedUser.Password != user.Password {
-		http.Error(w, "Invalid username or password", http.StatusUnauthorized)
+		middleware.ErrorResponse(w, middleware.UNAUTHORIZED, "Invalid username or password")
 		return
 	}
 
 	tokenString, err := utils.GenerateToken(*storedUser)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, err.Error())
 		return
 	}
 

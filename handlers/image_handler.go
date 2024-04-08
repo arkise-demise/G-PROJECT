@@ -11,11 +11,15 @@ import (
 	"path/filepath"
 )
 
+
 func init() {
     dbInstance = db.NewDatabase()
 }
 
-const imageUploadPath = "./images/"
+const (
+    imageUploadPath = "./images/"
+    maxUploadSize   = 32 << 20
+)
 
 func UploadImageHandler(w http.ResponseWriter, r *http.Request) {
     middleware.AuthMiddleware(http.HandlerFunc(uploadImageHandler)).ServeHTTP(w, r)
@@ -24,54 +28,56 @@ func UploadImageHandler(w http.ResponseWriter, r *http.Request) {
 func uploadImageHandler(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
 
-    if ctx.Err() != nil {
-		http.Error(w, "Request timed out", http.StatusRequestTimeout)
-		return
-	}
+    if r.Context().Err() != nil {
+        middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, "Request timed out")
+        return
+    }
 
     tokenCookie, err := r.Cookie("token")
     if err != nil {
-        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        middleware.ErrorResponse(w, middleware.UNAUTHORIZED, "Unauthorized")
         return
     }
 
     _, err = utils.VerifyToken(tokenCookie.Value)
     if err != nil {
-        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        middleware.ErrorResponse(w, middleware.UNAUTHORIZED, "Unauthorized")
         return
     }
 
-    err = r.ParseMultipartForm(10 << 20) 
+    r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
+
+    err = r.ParseMultipartForm(maxUploadSize)
     if err != nil {
-        http.Error(w, err.Error(), http.StatusBadRequest)
+        middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, err.Error())
         return
     }
 
     file, _, err := r.FormFile("images")
     if err != nil {
-        http.Error(w, "No image provided", http.StatusBadRequest)
+        middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, "No image provided")
         return
     }
     defer file.Close()
 
     err = os.MkdirAll(imageUploadPath, os.ModePerm)
     if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+        middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, err.Error())
         return
     }
 
-    filename := filepath.Join(imageUploadPath, utils.GenerateUUID()+".jpg")
+    filename := filepath.Join(imageUploadPath, utils.GenerateRequestID()+".jpg")
 
     newFile, err := os.Create(filename)
     if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+        middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, err.Error())
         return
     }
     defer newFile.Close()
 
     _, err = io.Copy(newFile, file)
     if err != nil {
-        http.Error(w, err.Error(), http.StatusInternalServerError)
+        middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, err.Error())
         return
     }
 
@@ -83,18 +89,16 @@ func GetImageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getImageHandler(w http.ResponseWriter, r *http.Request) {
-	
-    filename := r.URL.Path[len("/open-image/"):]
+    filename := r.URL.Path[len("/v1/images/"):] // Extract filename from URL
 
     imagePath := filepath.Join(imageUploadPath, filename)
 
     file, err := os.Open(imagePath)
     if err != nil {
-        http.Error(w, "Image not found", http.StatusNotFound)
+        middleware.ErrorResponse(w, middleware.UNABLE_TO_FIND_RESOURCE, "Image not found")
         return
     }
     defer file.Close()
 
     http.ServeFile(w, r, imagePath)
 }
-

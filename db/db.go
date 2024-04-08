@@ -35,12 +35,17 @@ func (db *Database) GetUserByID(userID int) *models.User {
 	return nil
 }
 
-func (db *Database) GetAllUsers() []models.User {
-	users := make([]models.User, 0, len(db.Users))
-	for _, user := range db.Users {
-		users = append(users, user)
-	}
-	return users
+func (db *Database) GetAllUsersWithPagination(pageNum, limit int) ([]models.User, error) {
+    offset := (pageNum - 1) * limit
+    var users []models.User
+    i := 0
+    for _, user := range db.Users {
+        if i >= offset && i < offset+limit {
+            users = append(users, user)
+        }
+        i++
+    }
+    return users, nil
 }
 
 func (db *Database) AddImage(image models.Image) {

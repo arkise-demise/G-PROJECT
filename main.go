@@ -13,48 +13,38 @@ import (
 )
 
 func main() {
-	requestTimeout := 2* time.Minute
+    timeoutMiddleware := middleware.TimeoutMiddleware
 
-	ctx, cancel := context.WithTimeout(context.Background(), requestTimeout)
-	defer cancel()
+    http.Handle("/login", timeoutMiddleware(http.HandlerFunc(handlers.LoginHandler)))
+    http.Handle("/register", timeoutMiddleware(http.HandlerFunc(handlers.RegisterHandler)))
+    http.Handle("/refresh-token", timeoutMiddleware(http.HandlerFunc(handlers.RefreshTokenHandler)))
+    http.Handle("/users", timeoutMiddleware(middleware.AuthMiddleware(http.HandlerFunc(handlers.ListUsersHandler))))
+    http.Handle("/upload", timeoutMiddleware(middleware.AuthMiddleware(http.HandlerFunc(handlers.UploadImageHandler))))
+    http.Handle("/v1/images/", timeoutMiddleware(middleware.AuthMiddleware(http.HandlerFunc(handlers.GetImageHandler))))
 
-	handlers.SetContext(ctx)
+    server := &http.Server{
+        Addr:         "localhost:8080",
+        ReadTimeout:  5 * time.Second,
+        WriteTimeout: 10 * time.Second,
+        IdleTimeout:  15 * time.Second,
+    }
 
-	http.HandleFunc("/login", handlers.LoginHandler)
-	http.HandleFunc("/register", handlers.RegisterHandler)
-	http.HandleFunc("/refresh-token", handlers.RefreshTokenHandler)
-	http.Handle("/users", middleware.AuthMiddleware(http.HandlerFunc(handlers.ListUsersHandler)))
-	http.Handle("/upload", middleware.AuthMiddleware(http.HandlerFunc(handlers.UploadImageHandler)))
-	http.Handle("/open-image/", middleware.AuthMiddleware(http.HandlerFunc(handlers.GetImageHandler)))
+    go func() {
+        if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+            log.Fatalf("Server error: %v", err)
+        }
+    }()
 
-	server := &http.Server{
-		Addr:         "localhost:8080",
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
-		IdleTimeout:  15 * time.Second,
-	}
+    quit := make(chan os.Signal, 1)
+    signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+    <-quit
+    log.Println("Shutting down server...")
 
-	go func() {
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Server error: %v", err)
-		}
-	}()
+    ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+    defer cancel()
 
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-
-	select {
-	case sig := <-sigCh:
-		cancel()
-		log.Printf("Received signal: %v", sig)
-	case <-ctx.Done():
-		log.Println("Context timed out")
-	}
-
-	shutdownCtx, cancelShutdown := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancelShutdown()
-
-	if err := server.Shutdown(shutdownCtx); err != nil {
-		log.Fatalf("Server shutdown error: %v", err)
-	}
+    if err := server.Shutdown(ctx); err != nil {
+        log.Fatalf("Server shutdown error: %v", err)
+    }
+    log.Println("Server gracefully stopped")
 }

@@ -1,11 +1,7 @@
 package utils
 
-import (
-	"github.com/google/uuid"
-)
+import "github.com/google/uuid"
 
-func GenerateUUID() string {
-    id := uuid.New()
-
-    return id.String()
+func GenerateRequestID() string {
+    return uuid.New().String()
 }
