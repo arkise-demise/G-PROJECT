@@ -89,7 +89,7 @@ func GetImageHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getImageHandler(w http.ResponseWriter, r *http.Request) {
-    filename := r.URL.Path[len("/v1/images/"):] // Extract filename from URL
+    filename := r.URL.Path[len("/open-image/"):]
 
     imagePath := filepath.Join(imageUploadPath, filename)
 

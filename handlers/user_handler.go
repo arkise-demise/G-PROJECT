@@ -6,7 +6,6 @@ import (
 	"G-PROJECT/models"
 	"encoding/json"
 	"net/http"
-	"regexp"
 	"strconv"
 )
 
@@ -18,6 +17,7 @@ type MetaData struct {
     Total   int `json:"total"`
 }
 
+
 func init() {
     dbInstance = db.NewDatabase()
 }
@@ -25,19 +25,36 @@ func init() {
 func ListUsersHandler(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
 
+    authHandler := middleware.AuthMiddleware(http.HandlerFunc(listUsersHandler))
+    authHandler.ServeHTTP(w, r)
+}
+
+
+func listUsersHandler(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "application/json")
+
+    page := 1
+    limit := 10 
+
     pageStr := r.URL.Query().Get("page")
     limitStr := r.URL.Query().Get("limit")
 
-    page, err := strconv.Atoi(pageStr)
-    if err != nil || page <= 0 {
-        middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, "Invalid page number")
-        return
+    if pageStr != "" {
+        pageValue, err := strconv.Atoi(pageStr)
+        if err != nil || pageValue <= 0 {
+            middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, "Invalid page number")
+            return
+        }
+        page = pageValue
     }
 
-    limit, err := strconv.Atoi(limitStr)
-    if err != nil || limit <= 0 {
-        middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, "Invalid limit")
-        return
+    if limitStr != "" {
+        limitValue, err := strconv.Atoi(limitStr)
+        if err != nil || limitValue <= 0 {
+            middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, "Invalid limit")
+            return
+        }
+        limit = limitValue
     }
 
     users, err := dbInstance.GetAllUsersWithPagination(page, limit)
@@ -63,75 +80,4 @@ func ListUsersHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     json.NewEncoder(w).Encode(successResponse)
-}
-
-func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "application/json")
-
-    var user models.User
-    err := json.NewDecoder(r.Body).Decode(&user)
-    if err != nil {
-        middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, err.Error())
-        return
-    }
-
-    if !isValidUser(user) {
-        middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, "Invalid user data")
-        return
-    }
-
-    dbInstance.AddUser(user)
-
-    user = removeEmptyFields(user).(models.User)
-
-    json.NewEncoder(w).Encode(user)
-}
-
-func isValidUser(user models.User) bool {
-    if !isValidEmail(user.Email) {
-        return false
-    }
-    if !isValidPhoneNumber(user.PhoneNumber) {
-        return false
-    }
-    if !isValidAddress(user.Address) {
-        return false
-    }
-    return true
-}
-
-func isValidEmail(email string) bool {
-    return regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`).MatchString(email)
-}
-
-func isValidPhoneNumber(phoneNumber models.PhoneNumber) bool {
-    return phoneNumber.IsValid()
-}
-
-func isValidAddress(address string) bool {
-    return !regexp.MustCompile(`\d`).MatchString(address)
-}
-
-func removeEmptyFields(data interface{}) interface{} {
-    switch value := data.(type) {
-    case models.User:
-        if value.ID == 0 {
-            value.ID = -1
-        }
-        if value.Username == "" {
-            value.Username = "N/A"
-        }
-        if value.Email == "" {
-            value.Email = "N/A"
-        }
-        if value.PhoneNumber == "" {
-            value.PhoneNumber = models.PhoneNumber("N/A")
-        }
-        if value.Address == "" {
-            value.Address = "N/A"
-        }
-        return value
-    default:
-        return data
-    }
 }

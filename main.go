@@ -20,7 +20,7 @@ func main() {
     http.Handle("/refresh-token", timeoutMiddleware(http.HandlerFunc(handlers.RefreshTokenHandler)))
     http.Handle("/users", timeoutMiddleware(middleware.AuthMiddleware(http.HandlerFunc(handlers.ListUsersHandler))))
     http.Handle("/upload", timeoutMiddleware(middleware.AuthMiddleware(http.HandlerFunc(handlers.UploadImageHandler))))
-    http.Handle("/v1/images/", timeoutMiddleware(middleware.AuthMiddleware(http.HandlerFunc(handlers.GetImageHandler))))
+    http.Handle("/open-image/", timeoutMiddleware(middleware.AuthMiddleware(http.HandlerFunc(handlers.GetImageHandler))))
 
     server := &http.Server{
         Addr:         "localhost:8080",

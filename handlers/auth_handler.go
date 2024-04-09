@@ -7,6 +7,7 @@ import (
 	"G-PROJECT/utils"
 	"encoding/json"
 	"net/http"
+	"regexp"
 	"time"
 )
 
@@ -61,11 +62,42 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !isValidUser(user) {
+		middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, "Invalid user data")
+		return
+	}
+
 	dbInstance.AddUser(user)
 
 	json.NewEncoder(w).Encode(user)
 }
 
+func isValidUser(user models.User) bool {
+	if !isValidEmail(user.Email) {
+		return false
+	}
+	if !isValidPhoneNumber(user.PhoneNumber) {
+		return false
+	}
+	if !isValidAddress(user.Address) {
+		return false
+	}
+	return true
+}
+
+func isValidEmail(email string) bool {
+	return regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`).MatchString(email)
+}
+
+func isValidPhoneNumber(phoneNumber models.PhoneNumber) bool {
+	return phoneNumber.IsValid()
+}
+
+func isValidAddress(address string) bool {
+	return !regexp.MustCompile(`\d`).MatchString(address)
+}
+	
+	
 func RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
