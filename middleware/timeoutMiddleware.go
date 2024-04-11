@@ -14,27 +14,33 @@ func TimeoutMiddleware(next http.Handler) http.Handler {
 
         r = r.WithContext(ctx)
 
-        done := make(chan struct{})
-        defer close(done) 
 
-        go func() {
+        done := make(chan struct{})
+        go func ()  {
+            defer close(done)
+            next.ServeHTTP(w, r) 
+        }()
+
+        
           
-            defer cancel() 
 
             select {
             
-            case <-time.After(requestTimeout):
-
-                w.WriteHeader(http.StatusRequestTimeout)
+            case <-ctx.Done():
+                if ctx.Err() == context.DeadlineExceeded {
+                    w.WriteHeader(http.StatusRequestTimeout)
               
-                w.Write([]byte("Request timed out"))
+                    w.Write([]byte("Request timed out"))
+                }
+
+                
            
             case <-done:
                
                 return
             }
-        }()
+        
 
-        next.ServeHTTP(w, r)
+        
     })
 }

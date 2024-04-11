@@ -49,13 +49,13 @@ func uploadImageHandler(w http.ResponseWriter, r *http.Request) {
 
     err = r.ParseMultipartForm(maxUploadSize)
     if err != nil {
-        middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, err.Error())
+        middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, err.Error())
         return
     }
 
     file, _, err := r.FormFile("images")
     if err != nil {
-        middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, "No image provided")
+        middleware.ErrorResponse(w, middleware.UNABLE_TO_FIND_RESOURCE, "No image provided")
         return
     }
     defer file.Close()

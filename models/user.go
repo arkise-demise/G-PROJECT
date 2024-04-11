@@ -9,13 +9,22 @@ import (
 type PhoneNumber string
 
 func (p PhoneNumber) MarshalJSON() ([]byte, error) {
-    formattedNumber := fmt.Sprintf("%s-------", p[:4]) 
-    return json.Marshal(formattedNumber)
+
+    if len(p) > 10 {
+        formattedNumber := fmt.Sprintf("2519%s", p[5:])
+        return json.Marshal(formattedNumber)
+
+    } else {
+        formattedNumber := fmt.Sprintf("2519%s", p[2:])
+        return json.Marshal(formattedNumber)
+
+    }
+
+}
+func (p PhoneNumber) IsValid() bool {
+    return regexp.MustCompile(`^(\+2519|09)\d{8}$`).MatchString(string(p)) 
 }
 
-func (p PhoneNumber) IsValid() bool {
-    return regexp.MustCompile(`^\d{10}$`).MatchString(string(p)) 
-}
 
 type User struct {
     ID          int         `json:"id"`
