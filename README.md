@@ -17,6 +17,8 @@ The project consists of several packages and files:
 - `image_handler.go`: Contains handler functions for uploading and retrieving images.
 - `user_handler.go`: Contains handler functions for listing users.
 - `models`: Package containing the data models (`User` and `Image`) used throughout the project.
+- `middleware`: Middleware functions for request handling, such as authentication and error handling.
+- `utils`: Utility functions, including UUID generation and JWT token handling.
 - `main.go`: Main entry point of the application, where HTTP server is initialized and routes are defined.
 
 ```
@@ -42,7 +44,7 @@ GET /users: Endpoint for listing all users.
 
 POST /upload: Endpoint for uploading an image. Requires a valid JWT token in the Authorization header and a JSON payload containing image data.
 
-GET /open-image: Endpoint for retrieving images. Requires a valid JWT token in the Authorization header.
+GET /open-image/id: Endpoint for retrieving images. Requires a valid JWT token in the Authorization header.
 
 Dependencies
 
@@ -60,6 +62,7 @@ This project includes a utility function for generating UUIDs.
 ### UUID Generation Utility
 
 ```bash
+
 The `GenerateUUID()` function in the `utils` package generates a UUID (Universally Unique Identifier) using the Google UUID library (`github.com/google/uuid`). This function is useful for generating unique identifiers within the project. and i used for the image handling.
 
 ```
