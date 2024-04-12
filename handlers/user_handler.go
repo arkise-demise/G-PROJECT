@@ -74,7 +74,7 @@ func ListUsersHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     json.NewEncoder(w).Encode(successResponse)   
-    //  authHandler.ServeHTTP(w, r)
+
 }
 
 
