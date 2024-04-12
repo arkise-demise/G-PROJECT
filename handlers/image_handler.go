@@ -22,11 +22,10 @@ const (
 )
 
 func UploadImageHandler(w http.ResponseWriter, r *http.Request) {
-    middleware.AuthMiddleware(http.HandlerFunc(uploadImageHandler)).ServeHTTP(w, r)
-}
-
-func uploadImageHandler(w http.ResponseWriter, r *http.Request) {
+        
     w.Header().Set("Content-Type", "application/json")
+
+   // time.Sleep(10*time.Second)
 
     if r.Context().Err() != nil {
         middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, "Request timed out")
@@ -82,13 +81,14 @@ func uploadImageHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     json.NewEncoder(w).Encode(map[string]string{"url": filename})
+
 }
+
 
 func GetImageHandler(w http.ResponseWriter, r *http.Request) {
-    middleware.AuthMiddleware(http.HandlerFunc(getImageHandler)).ServeHTTP(w, r)
-}
+    
+    // time.Sleep(10*time.Second)
 
-func getImageHandler(w http.ResponseWriter, r *http.Request) {
     filename := r.URL.Path[len("/open-image/"):]
 
     imagePath := filepath.Join(imageUploadPath, filename)
@@ -101,4 +101,5 @@ func getImageHandler(w http.ResponseWriter, r *http.Request) {
     defer file.Close()
 
     http.ServeFile(w, r, imagePath)
+    
 }

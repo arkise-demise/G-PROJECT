@@ -24,15 +24,9 @@ func init() {
 
 func ListUsersHandler(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
-
-    authHandler := middleware.AuthMiddleware(http.HandlerFunc(listUsersHandler))
-    authHandler.ServeHTTP(w, r)
-}
-
-
-func listUsersHandler(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "application/json")
-
+    
+    // time.Sleep(10*time.Second)
+    
     page := 1
     limit := 10 
 
@@ -79,5 +73,10 @@ func listUsersHandler(w http.ResponseWriter, r *http.Request) {
         Data:     users,
     }
 
-    json.NewEncoder(w).Encode(successResponse)
+    json.NewEncoder(w).Encode(successResponse)   
+    //  authHandler.ServeHTTP(w, r)
 }
+
+
+
+

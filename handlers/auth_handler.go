@@ -17,6 +17,7 @@ func init() {
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	// time.Sleep(10*time.Second)
 
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
@@ -49,6 +50,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	// time.Sleep(10*time.Second)
 
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
@@ -100,6 +102,7 @@ func isValidAddress(address string) bool {
 	
 func RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+	// time.Sleep(10*time.Second)
 
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
