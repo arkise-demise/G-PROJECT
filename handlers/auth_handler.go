@@ -22,13 +22,13 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		middleware.ErrorResponse(w , middleware.UNABLE_TO_READ,err.Error())
 		return
 	}
 
 	storedUser := dbInstance.GetUserByUsername(user.Username)
 	if storedUser == nil || storedUser.Password != user.Password {
-		middleware.ErrorResponse(w, middleware.UNAUTHORIZED, "Invalid username or password")
+		middleware.ErrorResponse(w, middleware.UNAUTHORIZED, "unauthorized user!")
 		return
 	}
 
@@ -37,6 +37,16 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, err.Error())
 		return
 	}
+
+	successResponse := struct {
+		Message string `json:"message"`
+		Token   string `json:"token"`
+	}{
+		Message: "User Successfully logged in!",
+		Token:   tokenString,
+	}
+
+	json.NewEncoder(w).Encode(successResponse)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
@@ -48,8 +58,11 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
+
 	w.Header().Set("Content-Type", "application/json")
+	
 	// time.Sleep(10*time.Second)
 
 	var user models.User
@@ -112,11 +125,7 @@ func RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	storedUser := dbInstance.GetUserByUsername(user.Username)
-	if storedUser == nil || storedUser.Password != user.Password {
-		middleware.ErrorResponse(w, middleware.UNAUTHORIZED, "Invalid username or password")
-		return
-	}
-
+	
 	tokenString, err := utils.GenerateToken(*storedUser)
 	if err != nil {
 		middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, err.Error())

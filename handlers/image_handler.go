@@ -10,80 +10,104 @@ import (
 	"os"
 	"path/filepath"
 )
-
-
-func init() {
-    dbInstance = db.NewDatabase()
-}
-
-const (
-    imageUploadPath = "./images/"
-    maxUploadSize   = 32 << 20
-)
-
+    
+    
+    func init() {
+        dbInstance = db.NewDatabase()
+    }
+    
+    const (
+        imageUploadPath = "./images/"
+        maxUploadSize   = 32 << 20
+    )
+    
 func UploadImageHandler(w http.ResponseWriter, r *http.Request) {
-        
-    w.Header().Set("Content-Type", "application/json")
+            
+     w.Header().Set("Content-Type", "application/json")
+    
+     //time.Sleep(10*time.Second)
+    
+     tokenCookie, err := r.Cookie("token")
 
-   // time.Sleep(10*time.Second)
-
-    if r.Context().Err() != nil {
-        middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, "Request timed out")
-        return
-    }
-
-    tokenCookie, err := r.Cookie("token")
-    if err != nil {
+     if err != nil {
         middleware.ErrorResponse(w, middleware.UNAUTHORIZED, "Unauthorized")
         return
     }
-
+    
     _, err = utils.VerifyToken(tokenCookie.Value)
-    if err != nil {
+     if err != nil {
         middleware.ErrorResponse(w, middleware.UNAUTHORIZED, "Unauthorized")
         return
     }
-
+    
     r.Body = http.MaxBytesReader(w, r.Body, maxUploadSize)
-
+    
     err = r.ParseMultipartForm(maxUploadSize)
     if err != nil {
-        middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, err.Error())
+        middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, err.Error())
         return
     }
-
-    file, _, err := r.FormFile("images")
+    
+    file, header, err := r.FormFile("images")
     if err != nil {
-        middleware.ErrorResponse(w, middleware.UNABLE_TO_FIND_RESOURCE, "No image provided")
+        middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, "No image provided")
         return
     }
     defer file.Close()
+    
+    var fileExt string
+    
+    switch header.Header.Get("Content-Type") {
+    
+    case "image/jpeg":
+    
+        fileExt = ".jpg"
+        
+    case "image/png":
 
+        fileExt = ".png"
+
+    case "image/gif":
+
+        fileExt = ".gif"
+
+    case "image/bmp":
+
+        fileExt = ".bmp"
+
+    default:
+
+        middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, "Unsupported image type")
+
+        return
+    }
+    
     err = os.MkdirAll(imageUploadPath, os.ModePerm)
     if err != nil {
         middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, err.Error())
         return
     }
-
-    filename := filepath.Join(imageUploadPath, utils.GenerateRequestID()+".jpg")
-
+    
+    filename := filepath.Join(imageUploadPath, utils.GenerateRequestID()+fileExt)
+    
     newFile, err := os.Create(filename)
     if err != nil {
         middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, err.Error())
         return
     }
     defer newFile.Close()
-
+    
     _, err = io.Copy(newFile, file)
     if err != nil {
         middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, err.Error())
         return
     }
-
+    
     json.NewEncoder(w).Encode(map[string]string{"url": filename})
-
-}
-
+    
+       
+    }
+    
 
 func GetImageHandler(w http.ResponseWriter, r *http.Request) {
         
