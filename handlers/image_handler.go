@@ -86,9 +86,7 @@ func UploadImageHandler(w http.ResponseWriter, r *http.Request) {
 
 
 func GetImageHandler(w http.ResponseWriter, r *http.Request) {
-    
-    // time.Sleep(10*time.Second)
-
+        
     filename := r.URL.Path[len("/open-image/"):]
 
     imagePath := filepath.Join(imageUploadPath, filename)
