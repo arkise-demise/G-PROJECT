@@ -6,6 +6,7 @@ import (
 	"G-PROJECT/models"
 	"G-PROJECT/utils"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"regexp"
 	"time"
@@ -38,20 +39,12 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	successResponse := struct {
-		Message string `json:"message"`
-		Token   string `json:"token"`
-	}{
-		Message: "User Successfully logged in!",
-		Token:   tokenString,
-	}
-
-	json.NewEncoder(w).Encode(successResponse)
+	fmt.Println("User successfully logged in!")
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
 		Value:    tokenString,
-		Expires:  time.Now().Add(24 * time.Hour),
+		Expires:  time.Now().Add(3 * time.Minute),
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
@@ -135,7 +128,7 @@ func RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
 		Value:    tokenString,
-		Expires:  time.Now().Add(24 * time.Hour),
+		Expires:  time.Now().Add(3 * time.Minute),
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteStrictMode,
