@@ -39,7 +39,8 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("User successfully logged in!")
+	fmt.Printf("User '%s' successfully logged in!\n", storedUser.Username)
+
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
@@ -50,6 +51,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteStrictMode,
 	})
 }
+
 
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
