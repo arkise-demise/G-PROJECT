@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"G-PROJECT/db"
-	"G-PROJECT/middleware"
 	"G-PROJECT/models"
 	"G-PROJECT/utils"
 	"encoding/json"
@@ -23,19 +22,19 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		middleware.ErrorResponse(w , middleware.UNABLE_TO_READ,err.Error())
+		ErrorResponse(w , UNABLE_TO_READ,err.Error())
 		return
 	}
 
 	storedUser := dbInstance.GetUserByUsername(user.Username)
 	if storedUser == nil || storedUser.Password != user.Password {
-		middleware.ErrorResponse(w, middleware.UNAUTHORIZED, "unauthorized user!")
+		ErrorResponse(w, UNAUTHORIZED, "unauthorized user!")
 		return
 	}
 
 	tokenString, err := utils.GenerateToken(*storedUser)
 	if err != nil {
-		middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, err.Error())
+		ErrorResponse(w, UNABLE_TO_SAVE, err.Error())
 		return
 	}
 
@@ -63,17 +62,17 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, err.Error())
+		ErrorResponse(w, UNABLE_TO_READ, err.Error())
 		return
 	}
 
 	if dbInstance.GetUserByUsername(user.Username) != nil {
-		middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, "Username already exists")
+		ErrorResponse(w, UNABLE_TO_SAVE, "Username already exists")
 		return
 	}
 
 	if !isValidUser(user) {
-		middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, "Invalid user data")
+		ErrorResponse(w, UNABLE_TO_SAVE, "Invalid user data")
 		return
 	}
 
@@ -115,7 +114,7 @@ func RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, err.Error())
+		ErrorResponse(w, UNABLE_TO_READ, err.Error())
 		return
 	}
 
@@ -123,7 +122,7 @@ func RefreshTokenHandler(w http.ResponseWriter, r *http.Request) {
 	
 	tokenString, err := utils.GenerateToken(*storedUser)
 	if err != nil {
-		middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, err.Error())
+		ErrorResponse(w, UNABLE_TO_SAVE, err.Error())
 		return
 	}
 

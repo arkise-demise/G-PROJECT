@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"G-PROJECT/db"
-	"G-PROJECT/middleware"
 	"G-PROJECT/utils"
 	"encoding/json"
 	"io"
@@ -30,13 +29,13 @@ func UploadImageHandler(w http.ResponseWriter, r *http.Request) {
      tokenCookie, err := r.Cookie("token")
 
      if err != nil {
-        middleware.ErrorResponse(w, middleware.UNAUTHORIZED, "Unauthorized")
+        ErrorResponse(w, UNAUTHORIZED, "Unauthorized")
         return
     }
     
     _, err = utils.VerifyToken(tokenCookie.Value)
      if err != nil {
-        middleware.ErrorResponse(w, middleware.UNAUTHORIZED, "Unauthorized")
+        ErrorResponse(w, UNAUTHORIZED, "Unauthorized")
         return
     }
     
@@ -44,13 +43,13 @@ func UploadImageHandler(w http.ResponseWriter, r *http.Request) {
     
     err = r.ParseMultipartForm(maxUploadSize)
     if err != nil {
-        middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, err.Error())
+        ErrorResponse(w, UNABLE_TO_READ, err.Error())
         return
     }
     
     file, header, err := r.FormFile("images")
     if err != nil {
-        middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, "No image provided")
+        ErrorResponse(w, UNABLE_TO_READ, "No image provided")
         return
     }
     defer file.Close()
@@ -77,14 +76,14 @@ func UploadImageHandler(w http.ResponseWriter, r *http.Request) {
 
     default:
 
-        middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, "Unsupported image type")
+        ErrorResponse(w, UNABLE_TO_READ, "Unsupported image type")
 
         return
     }
     
     err = os.MkdirAll(imageUploadPath, os.ModePerm)
     if err != nil {
-        middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, err.Error())
+        ErrorResponse(w, UNABLE_TO_SAVE, err.Error())
         return
     }
     
@@ -92,14 +91,14 @@ func UploadImageHandler(w http.ResponseWriter, r *http.Request) {
     
     newFile, err := os.Create(filename)
     if err != nil {
-        middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, err.Error())
+        ErrorResponse(w, UNABLE_TO_SAVE, err.Error())
         return
     }
     defer newFile.Close()
     
     _, err = io.Copy(newFile, file)
     if err != nil {
-        middleware.ErrorResponse(w, middleware.UNABLE_TO_SAVE, err.Error())
+        ErrorResponse(w, UNABLE_TO_SAVE, err.Error())
         return
     }
     
@@ -117,7 +116,7 @@ func GetImageHandler(w http.ResponseWriter, r *http.Request) {
 
     file, err := os.Open(imagePath)
     if err != nil {
-        middleware.ErrorResponse(w, middleware.UNABLE_TO_FIND_RESOURCE, "Image not found")
+        ErrorResponse(w, UNABLE_TO_FIND_RESOURCE, "Image not found")
         return
     }
     defer file.Close()

@@ -2,9 +2,11 @@ package middleware
 
 import (
 	"G-PROJECT/utils"
+
 	"context"
 	"net/http"
 )
+type contextKey string
 
 const (
 	requestIDKey contextKey = "requestID"

@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"G-PROJECT/db"
-	"G-PROJECT/middleware"
 	"G-PROJECT/models"
 	"encoding/json"
 	"net/http"
@@ -36,7 +35,7 @@ func ListUsersHandler(w http.ResponseWriter, r *http.Request) {
     if pageStr != "" {
         pageValue, err := strconv.Atoi(pageStr)
         if err != nil || pageValue <= 0 {
-            middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, "Invalid page number")
+            ErrorResponse(w, UNABLE_TO_READ, "Invalid page number")
             return
         }
         page = pageValue
@@ -45,7 +44,7 @@ func ListUsersHandler(w http.ResponseWriter, r *http.Request) {
     if limitStr != "" {
         limitValue, err := strconv.Atoi(limitStr)
         if err != nil || limitValue <= 0 {
-            middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, "Invalid limit")
+            ErrorResponse(w, UNABLE_TO_READ, "Invalid limit")
             return
         }
         limit = limitValue
@@ -53,7 +52,7 @@ func ListUsersHandler(w http.ResponseWriter, r *http.Request) {
 
     users, err := dbInstance.GetAllUsersWithPagination(page, limit)
     if err != nil {
-        middleware.ErrorResponse(w, middleware.UNABLE_TO_READ, "Failed to retrieve users")
+        ErrorResponse(w, UNABLE_TO_READ, "Failed to retrieve users")
         return
     }
 
