@@ -5,8 +5,17 @@ import (
 	"fmt"
 	"regexp"
 )
-
 type PhoneNumber string
+
+type User struct {
+    ID       int    `json:"id,omitempty"`
+    Username string `json:"username,omitempty"`
+    Password string `json:"password,omitempty"`
+    Email       string      `json:"email,omitempty"`
+    PhoneNumber PhoneNumber `json:"phone_number,omitempty"`
+    Address     string      `json:"address,omitempty"`
+}
+
 
 func (p PhoneNumber) MarshalJSON() ([]byte, error) {
 
@@ -21,18 +30,10 @@ func (p PhoneNumber) MarshalJSON() ([]byte, error) {
     }
 
 }
+
+
 func (p PhoneNumber) IsValid() bool {
-    return regexp.MustCompile(`^(\+2519|09)\d{8}$`).MatchString(string(p)) 
-}
-
-
-type User struct {
-    ID          int         `json:"id"`
-    Username    string      `json:"username"`
-    Password    string      `json:"password"`
-    Email       string      `json:"email"`
-    PhoneNumber PhoneNumber `json:"phone_number"`
-    Address     string      `json:"address"`
+    return regexp.MustCompile(`^(\+2519|09|9|2519)\d{8}$`).MatchString(string(p)) 
 }
 
 func (u *User) IsValid() bool {

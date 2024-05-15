@@ -10,13 +10,16 @@ import (
 
 var jwtKey = []byte("secret_key")
 
-const TokenExpiration = 3 * time.Minute
+const TokenExpiration = 1 * time.Hour
 
 func GenerateToken(user models.User) (string, error) {
+    expirationTime := time.Now().Add(TokenExpiration)
+
     claims := jwt.MapClaims{
         "id": user.ID,
-        "exp": time.Now().Add(TokenExpiration).Unix(), 
+        "exp": expirationTime.Unix(), 
     }
+
     token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
     tokenString, err := token.SignedString(jwtKey)
@@ -26,7 +29,7 @@ func GenerateToken(user models.User) (string, error) {
     return tokenString, nil
 }
 
-func VerifyToken(tokenString string) (models.User, error) {
+func VerifyToken(tokenString string) (*models.User, error) {
     token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
         if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
             return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -34,17 +37,17 @@ func VerifyToken(tokenString string) (models.User, error) {
         return jwtKey, nil
     })
     if err != nil {
-        return models.User{}, err
+        return nil, err
     }
 
     if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
         userID := int(claims["id"].(float64))
 
-        user := models.User{
+        user := &models.User{
             ID: userID,
         }
         return user, nil
     } else {
-        return models.User{}, fmt.Errorf("invalid token")
+        return nil, fmt.Errorf("invalid token")
     }
 }

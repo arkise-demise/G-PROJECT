@@ -1,46 +1,36 @@
 package middleware
 
 import (
+	"G-PROJECT/utils"
 	"context"
 	"net/http"
 	"time"
+
+	"github.com/gin-contrib/timeout"
+	"github.com/gin-gonic/gin"
 )
 
-func TimeoutMiddleware(next http.Handler) http.Handler {
-    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        requestTimeout := 5 * time.Second
-        ctx, cancel := context.WithTimeout(r.Context(), requestTimeout)
-        defer cancel() 
+type contextKey string
 
-        r = r.WithContext(ctx)
+const (
+	requestIDKey contextKey = "requestID"
+)
 
-
-        done := make(chan struct{})
-        go func ()  {
-            defer close(done)
-            next.ServeHTTP(w, r) 
-        }()
-
-        
-          
-
-            select {
-            
-            case <-ctx.Done():
-                if ctx.Err() == context.DeadlineExceeded {
-                    w.WriteHeader(http.StatusRequestTimeout)
-              
-                    w.Write([]byte("Request timed out"))
-                }
-
-                
-           
-            case <-done:
-               
-                return
-            }
-        
-
-        
-    })
+func TimeoutMiddleware() gin.HandlerFunc {
+	return timeout.New(
+		timeout.WithTimeout(5*time.Second),
+		timeout.WithHandler(func(c *gin.Context) {
+			requestID := utils.GenerateRequestID()
+			ctx := c.Request.Context()
+			ctx = context.WithValue(ctx, requestIDKey, requestID)
+			c.Request = c.Request.WithContext(ctx)
+			c.Next()
+		}),
+		timeout.WithResponse(func(c *gin.Context) {
+			requestID := c.Request.Context().Value(requestIDKey)
+			if requestID != nil {
+				c.JSON(http.StatusRequestTimeout, gin.H{"error": "Request timed out"})
+			}
+		}),
+	)
 }

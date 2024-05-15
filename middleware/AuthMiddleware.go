@@ -3,36 +3,33 @@ package middleware
 import (
 	"G-PROJECT/utils"
 
-	"context"
-	"net/http"
+	"github.com/gin-gonic/gin"
 )
-type contextKey string
 
 const (
-	requestIDKey contextKey = "requestID"
-	userIDKey    contextKey = "userID"
-	tokenCookieName = "token" 
+    tokenCookieName = "token"
 )
 
-func AuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		requestID := utils.GenerateRequestID()
-		ctx := context.WithValue(r.Context(), requestIDKey, requestID)
+func AuthMiddleware() gin.HandlerFunc {
+    return func(c *gin.Context) {
+        tokenCookie, err := c.Cookie(tokenCookieName)
+        if err != nil {
+            c.Set("error", CustomError{
+                Type:    UNAUTHORIZED,
+                Message: "Unauthorized: No token provided",
+            })
+            return
+        }
 
-		tokenCookie, err := r.Cookie(tokenCookieName)
-		if err != nil {
-			http.Error(w, "Unauthorized: No token provided", http.StatusUnauthorized)
-			return
-		}
+        _, err = utils.VerifyToken(tokenCookie)
+        if err != nil {
+            c.Set("error", CustomError{
+                Type:    UNAUTHORIZED,
+                Message: "Unauthorized: Invalid token",
+            })
+            return
+        }
 
-		user, err := utils.VerifyToken(tokenCookie.Value)
-		if err != nil {
-			http.Error(w, "Unauthorized: Invalid token", http.StatusUnauthorized)
-			return
-		}
-
-		ctx = context.WithValue(ctx, userIDKey, user.ID)
-
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+        c.Next()
+    }
 }

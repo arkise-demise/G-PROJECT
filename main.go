@@ -1,50 +1,31 @@
 package main
 
 import (
+	"G-PROJECT/database"
 	"G-PROJECT/handlers"
 	"G-PROJECT/middleware"
-	"context"
 	"log"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-    timeoutMiddleware := middleware.TimeoutMiddleware
 
-    http.Handle("/login", timeoutMiddleware(http.HandlerFunc(handlers.LoginHandler)))
-    http.Handle("/register", timeoutMiddleware(http.HandlerFunc(handlers.RegisterHandler)))
-    http.Handle("/refresh-token", timeoutMiddleware(http.HandlerFunc(handlers.RefreshTokenHandler)))
-    http.Handle("/users", timeoutMiddleware(middleware.AuthMiddleware(http.HandlerFunc(handlers.ListUsersHandler))))
-    http.Handle("/upload", timeoutMiddleware(middleware.AuthMiddleware(http.HandlerFunc(handlers.UploadImageHandler))))
-    http.Handle("/open-image/", timeoutMiddleware(middleware.AuthMiddleware(http.HandlerFunc(handlers.GetImageHandler))))
+	dbInstance, err := database.NewDatabase()
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+	defer dbInstance.Close() 
 
-    server := &http.Server{
-        Addr:         "localhost:8080",
-        ReadTimeout:  5 * time.Second,
-        WriteTimeout: 10 * time.Second,
-        IdleTimeout:  15 * time.Second,
-    }
+	r := gin.Default()
 
-    go func() {
-        if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-            log.Fatalf("Server error: %v", err)
-        }
-    }()
+	r.POST("/login", middleware.TimeoutMiddleware(), middleware.ErrorHandlerMiddleware(), handlers.LoginHandler)
+	r.POST("/register", middleware.TimeoutMiddleware(), middleware.ErrorHandlerMiddleware(), handlers.RegisterHandler)
+	r.POST("/refresh-token", middleware.TimeoutMiddleware(), middleware.ErrorHandlerMiddleware(), handlers.RefreshTokenHandler)
+	r.GET("/users", middleware.TimeoutMiddleware(), middleware.AuthMiddleware(), middleware.ErrorHandlerMiddleware(), handlers.ListUsersHandler)
+	r.POST("/upload", middleware.TimeoutMiddleware(), middleware.AuthMiddleware(), middleware.ErrorHandlerMiddleware(), handlers.UploadImageHandler)
+	r.GET("/open-image/:filename", middleware.TimeoutMiddleware(), middleware.AuthMiddleware(), middleware.ErrorHandlerMiddleware(),handlers.GetImageHandler)
 
-    quit := make(chan os.Signal, 1)
-    signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-    <-quit
-    log.Println("Shutting down server...")
-
-    ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-    defer cancel()
-
-    if err := server.Shutdown(ctx); err != nil {
-        log.Fatalf("Server shutdown error: %v", err)
-    }
-    log.Println("Server gracefully stopped")
+	
+	r.Run(":8080")
 }
