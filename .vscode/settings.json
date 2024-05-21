@@ -1,3 +1,11 @@
 {
-  "cSpell.words": ["dgrijalva", "godotenv", "gonic", "gorm", "joho"]
+  "cSpell.words": [
+    "dgrijalva",
+    "godoc",
+    "godotenv",
+    "gonic",
+    "gorm",
+    "joho",
+    "swaggo"
+  ]
 }
