@@ -43,3 +43,14 @@ func (u *User) IsValid() bool {
 func (u *User) isValidEmail() bool {
     return regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`).MatchString(u.Email)
 }
+
+type LoginRequest struct {
+	Username string `json:"username" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+type LoginResponse struct {
+	Message string `json:"message"`
+	Token   string `json:"token"`
+	User    string `json:"user"`
+}

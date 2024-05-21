@@ -125,7 +125,7 @@ const docTemplate = `{
                         "in": "formData",
                         "description": "The image file to upload",
                         "required": true,
-                        "type": "images"
+                        "type": "file"
                     }
                 ],
                 "responses": {
@@ -180,7 +180,7 @@ const docTemplate = `{
                     "type": "string",
                     "format": "email"
                 },
-                "phoneNumber": {
+                "phone_number": {
                     "type": "string"
                 },
                 "address": {

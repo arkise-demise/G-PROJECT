@@ -39,7 +39,7 @@ func RegisterHandler(c *gin.Context) {
 	if err := c.BindJSON(&userInput); err != nil {
 		c.Set("error", middleware.CustomError{
 			Type:    middleware.UNABLE_TO_READ,
-			Message: err.Error(),
+			Message: "Invalid input",
 		})
 		return
 	}
@@ -63,7 +63,7 @@ func RegisterHandler(c *gin.Context) {
 	}
 
 	// Update user data with formatted phone number
-	userInput.PhoneNumber = models.PhoneNumber(formattedPhoneNumber)
+	userInput.PhoneNumber = models.PhoneNumber(formattedPhoneNumber[1 : len(formattedPhoneNumber)-1]) // Removing quotes from JSON string
 
 	var user models.User
 	dbInstance.DB.Where("username = ?", userInput.Username).Find(&user)
