@@ -52,7 +52,7 @@ func UploadImageHandler(c *gin.Context) {
     if err != nil {
         c.Set("error", middleware.CustomError{
             Type:    middleware.UNAUTHORIZED,
-            Message: "can'nt verified!",
+            Message: "can't verified!",
         })
         return
     }

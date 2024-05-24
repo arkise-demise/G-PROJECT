@@ -14,6 +14,7 @@ type User struct {
     Email       string      `json:"email,omitempty"`
     PhoneNumber PhoneNumber `json:"phone_number,omitempty"`
     Address     string      `json:"address,omitempty"`
+    Profile     string      `json:"profile_image,omitempty"`
 }
 
 
