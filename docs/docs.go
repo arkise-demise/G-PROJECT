@@ -86,6 +86,17 @@ const docTemplate = `{
                 "tags": [
                     "auth"
                 ],
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/RefreshTokenRequest"
+                        },
+                        "required": true,
+                        "description": "Refresh token request object"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Token refreshed successfully"
@@ -169,7 +180,6 @@ const docTemplate = `{
         "User": {
             "type": "object",
             "properties": {
-            
                 "username": {
                     "type": "string"
                 },
@@ -189,6 +199,17 @@ const docTemplate = `{
             }
         },
         "LoginRequest": {
+            "type": "object",
+            "properties": {
+                "username": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "RefreshTokenRequest": {
             "type": "object",
             "properties": {
                 "username": {

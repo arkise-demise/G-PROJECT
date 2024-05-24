@@ -63,7 +63,7 @@ func RegisterHandler(c *gin.Context) {
 	}
 
 	// Update user data with formatted phone number
-	userInput.PhoneNumber = models.PhoneNumber(formattedPhoneNumber[1 : len(formattedPhoneNumber)-1]) // Removing quotes from JSON string
+	userInput.PhoneNumber = models.PhoneNumber(formattedPhoneNumber[1 : len(formattedPhoneNumber)-1]) 
 
 	var user models.User
 	dbInstance.DB.Where("username = ?", userInput.Username).Find(&user)
@@ -112,7 +112,7 @@ func isValidUser(user models.User) bool {
 }
 
 func isValidEmail(email string) bool {
-	return regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`).MatchString(email)
+    return regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@gmail\.com$`).MatchString(email)
 }
 
 func isValidPhoneNumber(phoneNumber models.PhoneNumber) bool {

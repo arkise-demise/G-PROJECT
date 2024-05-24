@@ -20,47 +20,65 @@ import (
 // @Tags auth
 // @Accept  json
 // @Produce  json
+// @Param body body models.RefreshTokenRequest true "Refresh token request object"
 // @Success 200 {string} string "Token refreshed successfully"
 // @Failure 401 {string} string "Unauthorized"
 // @Router /refresh-token [post]
 
 func init() {
-    var err error
-    dbInstance, err = database.NewDatabase()
-    if err != nil {
-        panic(err)
-    }
+	var err error
+	dbInstance, err = database.NewDatabase()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func RefreshTokenHandler(c *gin.Context) {
-    var user models.User
+	var request models.RefreshTokenRequest
 
-    if err := c.BindJSON(&user); err != nil {
-        c.Set("error", middleware.CustomError{
-            Type:    middleware.UNABLE_TO_READ,
-            Message: "Unable to read request",
-        })
-        return
-    }
+	if err := c.BindJSON(&request); err != nil {
+		c.Set("error", middleware.CustomError{
+			Type:    middleware.UNABLE_TO_READ,
+			Message: "Unable to read request",
+		})
+		return
+	}
 
-    storedUser,err := dbInstance.GetUserByUsername(user.Username)
-    if err == nil {
-        c.Set("error", middleware.CustomError{
-            Type:    middleware.UNABLE_TO_FIND_RESOURCE,
-            Message: "User not found",
-        })
-        return
-    }
+	// Verify the username and password
+	storedUser, err := dbInstance.GetUserByUsername(request.Username)
+	if err != nil || storedUser == nil {
+		c.Set("error", middleware.CustomError{
+			Type:    middleware.UNABLE_TO_FIND_RESOURCE,
+			Message: "User not found",
+		})
+		return
+	}
 
-    tokenString, err := utils.GenerateToken(*storedUser)
-    if err != nil {
-        c.Set("error", middleware.CustomError{
-            Type:    middleware.UNABLE_TO_SAVE,
-            Message: "Unable to generate token",
-        })
-        return
-    }
+	// Compare the provided password with the stored password
+	if !utils.ComparePasswords(storedUser.Password, request.Password) {
+		c.Set("error", middleware.CustomError{
+			Type:    middleware.UNAUTHORIZED,
+			Message: "Invalid username or password",
+		})
+		return
+	}
 
-    c.SetCookie("token", tokenString, int(time.Now().Add(3*time.Minute).Unix()), "/", "", true, true)
-    c.JSON(http.StatusOK, gin.H{"message": "Token refreshed successfully!"})
+	// Generate a new token for the user
+	tokenString, err := utils.GenerateToken(*storedUser)
+	if err != nil {
+		c.Set("error", middleware.CustomError{
+			Type:    middleware.UNABLE_TO_SAVE,
+			Message: "Unable to generate token",
+		})
+		return
+	}
+
+	// Set the new token in the response
+	c.SetCookie("token", tokenString, int(time.Now().Add(3*time.Minute).Unix()), "/", "", true, true)
+	c.JSON(http.StatusOK, gin.H{
+        "message": "Token refreshed successfully!",
+        "token":tokenString,
+        "User":    storedUser.Username,
+    })
 }
+

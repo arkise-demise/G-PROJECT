@@ -54,3 +54,8 @@ type LoginResponse struct {
 	Token   string `json:"token"`
 	User    string `json:"user"`
 }
+
+type RefreshTokenRequest struct {
+	Username string `json:"username"`
+	Password    string `json:"password"`
+}
