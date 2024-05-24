@@ -52,7 +52,7 @@ func LoginHandler(c *gin.Context) {
         return
     }
 
-    if storedUser == nil || !utils.ComparePasswords(storedUser.Password, loginRequest.Password) {
+    if !utils.ComparePasswords(storedUser.Password, loginRequest.Password) {
         c.Set("error", middleware.CustomError{
             Type:    middleware.UNAUTHORIZED,
             Message: "Could not generate token!",
